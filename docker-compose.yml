@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  echte-link:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/root/data
+    environment:
+      - GIN_MODE=release
+      - DB_PATH=/root/data/echter.link.sqlite
+      - DOMAIN=${DOMAIN:-http://localhost:8080}
+    restart: unless-stopped
+    # Resource limits for small server
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 500M
+        reservations:
+          cpus: '0.25'
+          memory: 250M
