@@ -62,6 +62,7 @@ jobs:
     # 6. SBOM erzeugen
     - name: Generate SBOM
       uses: anchore/sbom-action@v0
+      continue-on-error: true
       with:
         image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         format: spdx-json
