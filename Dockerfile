@@ -22,8 +22,11 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 # Binary kopieren
 COPY --from=builder /app/echte-link /echte-link
 
+# Optional: leeres Datenverzeichnis aus Builder kopieren
+RUN mkdir /root  # scratch hat keinen /root
+COPY --from=builder /app /root/app  # kopiert alles aus /app, falls du config/sonstiges brauchst
+
 WORKDIR /root
-RUN mkdir -p /root/data
 
 EXPOSE 8080
 
