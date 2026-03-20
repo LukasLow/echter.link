@@ -1,4 +1,4 @@
-# echter.link - Modern URL Shortener
+# echter.link - Modern URL Shortener!
 
 A lightweight URL shortener built with Go, featuring Dark Mode UI, interactive mouse effects, and snow animation. Optimized for small servers (0.5 vCPU, 500MB RAM).
 
