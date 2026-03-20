@@ -10,20 +10,21 @@ RUN go mod download
 # Copy source
 COPY . .
 
-# Build statisches Binary ohne CGO
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o echte-link ./cmd/server.go
+# Build statisches Binary mit CGO für SQLite
+RUN CGO_ENABLED=1 go build -ldflags="-s -w" -o echte-link ./cmd/server.go
 
 # Stage 2: Minimal Runtime
-FROM scratch
+FROM alpine:latest
 
-# CA-Certs für HTTPS
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# CA-Certs für HTTPS und SQLite Support
+RUN apk --no-cache add ca-certificates sqlite
 
 # Binary kopieren
 COPY --from=builder /app/echte-link /echte-link
 
-# Optional: Verzeichnisse beim Containerstart erstellen
-# (z.B. via Entrypoint oder CMD)
+# Datenverzeichnis erstellen
+RUN mkdir -p /root/data
+
 WORKDIR /root
 
 EXPOSE 8080
