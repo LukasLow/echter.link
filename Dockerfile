@@ -19,8 +19,8 @@ RUN CGO_ENABLED=1 go build -ldflags="-s -w" -o echte-link ./cmd/server.go
 # Stage 2: Minimal Runtime
 FROM alpine:latest
 
-# CA-Certs für HTTPS und SQLite Support
-RUN apk --no-cache add ca-certificates sqlite
+# CA-Certs und SQLite Support für CGO
+RUN apk --no-cache add ca-certificates sqlite-dev
 
 # Binary kopieren
 COPY --from=builder /app/echte-link /echte-link
