@@ -1,40 +1,34 @@
-# Use Alpine Linux for minimal size
+# Stage 1: Builder
 FROM golang:1.21-alpine AS builder
-
-# Install gcc and musl-dev for CGO
-RUN apk add --no-cache gcc musl-dev
 
 # Set working directory
 WORKDIR /app
 
-# Copy go mod files
+# Copy go mod files and download dependencies (cacheable)
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o echte-link ./cmd/server.go
+# Build statisches Binary ohne CGO → kleiner + schneller
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o echte-link ./cmd/server.go
 
-# Final stage - minimal runtime image
-FROM alpine:latest
+# Stage 2: Minimal Runtime
+FROM scratch
 
-# Install runtime dependencies
-RUN apk --no-cache add ca-certificates
+# Copy CA certs for HTTPS support
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-WORKDIR /root/
-
-# Copy the binary from builder stage
-COPY --from=builder /app/echte-link .
+# Copy the binary
+COPY --from=builder /app/echte-link /echte-link
 
 # Create data directory
+WORKDIR /root
 RUN mkdir -p /root/data
 
 # Expose port
 EXPOSE 8080
 
 # Run the binary
-CMD ["./echte-link"]
+CMD ["/echte-link"]
