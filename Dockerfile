@@ -1,9 +1,6 @@
 # Stage 1: Builder
 FROM golang:1.21-alpine AS builder
 
-# Install GCC für CGO
-RUN apk add --no-cache gcc musl-dev
-
 WORKDIR /app
 
 # Dependencies
@@ -13,14 +10,14 @@ RUN go mod download
 # Copy source
 COPY . .
 
-# Build statisches Binary mit CGO für SQLite
-RUN CGO_ENABLED=1 go build -ldflags="-s -w" -o echte-link ./cmd/server.go
+# Build statisches Binary ohne CGO (modernc.org/sqlite ist pure Go)
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o echte-link ./cmd/server.go
 
 # Stage 2: Minimal Runtime
 FROM alpine:latest
 
-# CA-Certs und SQLite Support für CGO
-RUN apk --no-cache add ca-certificates sqlite-dev
+# CA-Certs für HTTPS
+RUN apk --no-cache add ca-certificates
 
 # Binary kopieren
 COPY --from=builder /app/echte-link /echte-link
