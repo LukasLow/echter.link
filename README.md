@@ -107,7 +107,7 @@ apt install -y caddy
 
 # Caddy konfigurieren
 cat > /etc/caddy/Caddyfile << 'EOF'
-deine-domain.de {
+echter.link {
     reverse_proxy localhost:8080
 }
 EOF
@@ -166,7 +166,7 @@ chmod +x /etc/cron.daily/backup-echter-link
 
 ### Fertig!
 
-Dein echter.link ist jetzt unter `https://deine-domain.de` erreichbar mit:
+Dein echter.link ist jetzt unter `https://echter.link` erreichbar mit:
 - ✅ Automatischem SSL (Caddy)
 - ✅ Persistenten Daten (SQLite)
 - ✅ Automatischen Updates (Watchtower)
