@@ -47,6 +47,143 @@ podman run -d -p 8080:8080 -v ./data:/root/data:z echter-link
 
 Die Webseite ist dann unter `http://localhost:8080` erreichbar.
 
+## 🖥️ Server-Setup (Debian)
+
+Komplette Anleitung für einen frischen Debian-Server (1 CPU, 1GB RAM, 10GB Storage).
+
+### 1. System aktualisieren
+
+```bash
+# Als root oder mit sudo
+apt update && apt upgrade -y
+apt install -y curl wget git
+```
+
+### 2. Podman installieren
+
+```bash
+# Podman aus den offiziellen Repositories
+apt install -y podman podman-compose
+
+# Überprüfen
+podman --version
+```
+
+### 3. Repository klonen
+
+```bash
+cd /opt
+git clone https://github.com/LukasLow/echter.link.git
+cd echter.link
+```
+
+### 4. Persistente Daten anlegen
+
+```bash
+# Datenverzeichnis erstellen
+mkdir -p /opt/echter.link/data
+
+# Berechtigungen setzen (für rootless Podman)
+chmod 755 /opt/echter.link/data
+```
+
+### 5. Container starten (mit Podman)
+
+```bash
+# Container bilden und starten
+podman build -t echter-link .
+
+# Container laufen lassen (Port 8080)
+podman run -d \
+  --name echter-link \
+  -p 8080:8080 \
+  -v /opt/echter.link/data:/root/data:z \
+  -e GIN_MODE=release \
+  -e DB_PATH=/root/data/echter.link.sqlite \
+  -e DOMAIN=https://deine-domain.de \
+  --restart unless-stopped \
+  echter-link
+```
+
+### 6. SSL/HTTPS mit Caddy (leichtgewichtig)
+
+Caddy ist perfekt für kleine Server - automatisches HTTPS, sehr wenig RAM/CPU.
+
+```bash
+# Caddy installieren
+apt install -y debian-keyring debian-archive-keyring apt-transport-https
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update
+apt install -y caddy
+
+# Caddy konfigurieren
+cat > /etc/caddy/Caddyfile << 'EOF'
+deine-domain.de {
+    reverse_proxy localhost:8080
+}
+EOF
+
+# Caddy starten
+systemctl enable caddy
+systemctl start caddy
+```
+
+### 7. Automatische Updates mit Watchtower
+
+```bash
+# Watchtower Container starten (prüft alle 24h auf Updates)
+podman run -d \
+  --name watchtower \
+  -v /run/user/$(id - u)/podman/podman.sock:/var/run/docker.sock:z \
+  --restart unless-stopped \
+  containrrr/watchtower \
+  --cleanup \
+  --interval 86400 \
+  echter-link
+```
+
+### 8. Als Systemd-Service (optional)
+
+Für automatischen Start beim Booten:
+
+```bash
+# Podman-Container als Systemd-Service generieren
+podman generate systemd --name echter-link --files
+
+# Service-Datei verschieben
+mv container-echter-link.service /etc/systemd/system/
+
+# Aktivieren und starten
+systemctl daemon-reload
+systemctl enable container-echter-link.service
+systemctl start container-echter-link.service
+```
+
+### 9. Backup der Datenbank
+
+```bash
+# Cron-Job für tägliches Backup
+cat > /etc/cron.daily/backup-echter-link << 'EOF'
+#!/bin/bash
+BACKUP_DIR="/opt/echter.link/backups"
+mkdir -p "$BACKUP_DIR"
+cp "/opt/echter.link/data/echter.link.sqlite" "$BACKUP_DIR/echter.link-$(date +%Y%m%d).sqlite"
+# Alte Backups löschen (älter als 7 Tage)
+find "$BACKUP_DIR" -name "echter.link-*.sqlite" -mtime +7 -delete
+EOF
+
+chmod +x /etc/cron.daily/backup-echter-link
+```
+
+### Fertig!
+
+Dein echter.link ist jetzt unter `https://deine-domain.de` erreichbar mit:
+- ✅ Automatischem SSL (Caddy)
+- ✅ Persistenten Daten (SQLite)
+- ✅ Automatischen Updates (Watchtower)
+- ✅ Täglichen Backups
+
 ### Lokal entwickeln
 
 ```bash
