@@ -8,317 +8,548 @@ import (
 
 func HomeHandler(c *gin.Context) {
 	html := `<!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-    <title>echter.link - URL Shortener V1</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>echter.link - URL Shortener</title>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            max-width: 600px; margin: 50px auto; padding: 20px; 
-            background: #0a0a0a; color: #ffffff; 
-            position: relative; overflow-x: hidden;
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --card-bg: white;
+            --card-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --input-bg: #f8f9fa;
+            --input-border: #e9ecef;
+            --input-focus: #667eea;
+            --result-bg: #f8f9fa;
+            --result-border: #667eea;
+            --btn-primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --btn-copy-border: #667eea;
+            --btn-copy-color: #667eea;
+            --btn-copy-hover-bg: #667eea;
+            --btn-copy-hover-color: white;
+            --error-bg: #fee;
+            --error-border: #e74c3c;
+            --error-color: #c33;
+            --link-color: #667eea;
+            --footer-bg: rgba(0,0,0,0.2);
+            --footer-text: white;
+            --toggle-bg: rgba(255,255,255,0.2);
+            --toggle-active: white;
         }
-        .container { 
-            background: #1a1a1a; padding: 40px; border-radius: 12px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
-            border: 1px solid #333; position: relative; z-index: 1;
+
+        [data-theme="dark"] {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --card-bg: #1e1e2e;
+            --card-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --input-bg: #2a2a3a;
+            --input-border: #3a3a4a;
+            --input-focus: #8b5cf6;
+            --result-bg: #2a2a3a;
+            --result-border: #8b5cf6;
+            --btn-primary-bg: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            --btn-copy-border: #8b5cf6;
+            --btn-copy-color: #8b5cf6;
+            --btn-copy-hover-bg: #8b5cf6;
+            --btn-copy-hover-color: white;
+            --error-bg: #3a1f1f;
+            --error-border: #ef4444;
+            --error-color: #ef4444;
+            --link-color: #8b5cf6;
+            --footer-bg: rgba(0,0,0,0.4);
+            --footer-text: #d0d0d0;
+            --toggle-bg: rgba(255,255,255,0.1);
+            --toggle-active: #8b5cf6;
         }
-        h1 { color: #fff; text-align: center; margin-bottom: 30px; }
-        .form-group { margin: 20px 0; }
-        input { 
-            width: 100%; padding: 12px; margin: 5px 0; 
-            border: 1px solid #444; border-radius: 4px; 
-            box-sizing: border-box; background: #2a2a2a; color: #fff;
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        button { 
-            background: linear-gradient(45deg, #007bff, #0056b3); 
-            color: white; padding: 12px 24px; border: none; 
-            border-radius: 4px; cursor: pointer; margin: 5px;
-            transition: all 0.3s ease;
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s ease;
         }
-        button:hover { 
-            background: linear-gradient(45deg, #0056b3, #004085); 
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 520px;
+            text-align: center;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle {
+            display: flex;
+            background: var(--toggle-bg);
+            border-radius: 25px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .theme-btn {
+            border: none;
+            background: transparent;
+            color: var(--footer-text);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .theme-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .theme-btn.active {
+            background: var(--toggle-active);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .theme-btn.active {
+            color: white;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--btn-primary-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 35px;
+        }
+
+        .input-group {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .input-prefix {
+            background: var(--input-bg);
+            padding: 16px 14px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border: none;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        input[type="url"] {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            font-size: 1rem;
+            outline: none;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .option-group {
+            text-align: left;
+        }
+
+        .option-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .option-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--input-border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            outline: none;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            transition: border-color 0.2s, background 0.3s ease, color 0.3s ease;
+        }
+
+        .option-group input:focus {
+            border-color: var(--input-focus);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px 28px;
+            background: var(--btn-primary-bg);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
             transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
         }
-        .result { 
-            background: #2a2a2a; padding: 15px; border-radius: 4px; 
-            margin: 10px 0; word-break: break-all; border: 1px solid #444;
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: var(--result-bg);
+            border-radius: 12px;
+            border-left: 4px solid var(--result-border);
+            text-align: left;
+            transition: background 0.3s ease;
         }
-        .options { display: flex; gap: 10px; margin: 10px 0; }
-        .options label { flex: 1; color: #ccc; }
-        .status { 
-            text-align: center; margin: 20px 0; padding: 10px; 
-            border-radius: 6px; background: linear-gradient(45deg, #1a3a52, #0d2336); 
-            color: #4fc3f7; border: 1px solid #2c5282;
+
+        .result a {
+            color: var(--link-color);
+            word-break: break-all;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .result a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-copy {
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--btn-copy-border);
+            color: var(--btn-copy-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: var(--btn-copy-hover-bg);
+            color: var(--btn-copy-hover-color);
         }
 
         /* Footer */
         footer {
-            margin-top: 40px;
-            padding: 20px;
+            background: var(--footer-bg);
+            backdrop-filter: blur(10px);
+            color: var(--footer-text);
+            padding: 25px 20px;
             text-align: center;
-            border-top: 1px solid #333;
-            color: #888;
-            font-size: 0.9em;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
-        footer a {
-            color: #4fc3f7;
-            text-decoration: none;
-            transition: color 0.3s ease;
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        footer a:hover {
-            color: #007bff;
-        }
-
-        .footer-version {
-            background: linear-gradient(45deg, #1a3a52, #0d2336);
-            padding: 8px 16px;
+        .version-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 14px;
             border-radius: 20px;
-            display: inline-block;
-            margin: 10px 0;
-            border: 1px solid #2c5282;
-            color: #4fc3f7;
-            font-weight: 500;
-        }
-        
-        /* Input Group mit https:// Prefix */
-        .input-group { position: relative; display: flex; align-items: stretch; width: 100%; }
-        .input-group-text { 
-            display: flex; align-items: center; padding: 12px; 
-            background: #2a2a2a; border: 1px solid #444; 
-            border-right: none; border-radius: 4px 0 0 4px; 
-            color: #888; font-weight: 500; white-space: nowrap;
-        }
-        .input-group input { 
-            border-radius: 0 4px 4px 0; border-left: none; flex: 1; 
+            font-size: 0.85rem;
+            margin-bottom: 12px;
         }
 
-        /* Mouse Glow Effect */
-        .mouse-glow {
-            position: fixed;
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9999;
-            mix-blend-mode: screen;
-            transition: opacity 0.3s ease;
+        .version-badge .label {
+            opacity: 0.8;
         }
 
-        /* Snow Effect */
-        .snowflake {
-            position: fixed;
-            top: -10px;
-            color: #fff;
-            font-size: 1em;
-            animation: fall linear;
-            z-index: 0;
+        .version-badge .version {
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
         }
 
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(360deg);
+        .footer-links {
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            margin: 0 12px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        [data-theme="dark"] .footer-links a {
+            color: rgba(208,208,208,0.9);
+        }
+
+        [data-theme="dark"] .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-tech {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        .error {
+            background: var(--error-bg);
+            border-left-color: var(--error-border);
+            color: var(--error-color);
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 35px 25px;
+            }
+            .card-header {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            .theme-toggle {
+                order: -1;
+            }
+            .logo {
+                font-size: 2rem;
+            }
+            .options {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="mouse-glow" id="mouseGlow"></div>
-    <div class="container">
-        <h1>echter.link</h1>
-        <div class="status">🚀 V1.1: Core & Shortener (Das Fundament)</div>
-        
-        <div class="form-group">
+    <div class="main-container">
+        <div class="card">
+            <div class="card-header">
+                <div></div>
+                <div class="theme-toggle">
+                    <button class="theme-btn" data-theme="light" title="Hell">☀️</button>
+                    <button class="theme-btn" data-theme="dark" title="Dunkel">🌙</button>
+                    <button class="theme-btn active" data-theme="auto" title="System">🖥️</button>
+                </div>
+            </div>
+
+            <h1 class="logo">echter.link</h1>
+            <p class="tagline">Kurze Links. Echte Einfachheit.</p>
+            
             <div class="input-group">
-                <div class="input-group-text">https://</div>
-                <input type="url" id="longUrl" placeholder="deine-webseite.com">
+                <span class="input-prefix">https://</span>
+                <input type="url" id="longUrl" placeholder="deine-webseite.com" autofocus>
             </div>
             
             <div class="options">
-                <label>
-                    Custom Code: 
-                    <input type="text" id="customCode" placeholder="Leave empty for random">
-                </label>
-                <label>
-                    Expires in (hours): 
-                    <input type="number" id="expiresIn" placeholder="24 = 1 day, 720 = 30 days" max="720">
-                </label>
+                <div class="option-group">
+                    <label>Eigener Code (optional)</label>
+                    <input type="text" id="customCode" placeholder="z.B. mein-link, sommer-sale-2024" title="Mindestens 3 Zeichen. Erlaubt: Buchstaben, Zahlen, Bindestrich (-) und Unterstrich (_)">
+                </div>
+                <div class="option-group">
+                    <label>Link läuft ab nach</label>
+                    <select id="expiresIn" style="width: 100%; padding: 12px 14px; border: 2px solid var(--input-border); border-radius: 10px; font-size: 0.95rem; outline: none; background: var(--card-bg); color: var(--text-primary); cursor: pointer; transition: border-color 0.2s;">
+                        <option value="1">1 Stunde</option>
+                        <option value="24" selected>24 Stunden (1 Tag)</option>
+                        <option value="72">3 Tage</option>
+                        <option value="168">7 Tage</option>
+                    </select>
+                </div>
             </div>
             
-            <button onclick="shortenUrl()">Create Short URL</button>
+            <button class="btn-primary" onclick="shortenUrl()">
+                ✨ Kostenlosen Kurzlink erstellen
+            </button>
+            
+            <div id="result"></div>
         </div>
-        <div id="shortResult"></div>
     </div>
 
     <footer>
-        <div class="footer-version">🚀 V1.1: Core & Shortener (Das Fundament)</div>
-        <p>
-            <strong>echter.link</strong> - Modern URL Shortener<br>
-            <small>Features: Go-Backend, SQLite, Random Codes, Custom Codes, URL Validation, Expiration, Dark Mode, Mouse Glow, Snow Effects</small>
-        </p>
-        <p>
-            <a href="#" onclick="showStats()">📊 Statistics</a> | 
-            <a href="#" onclick="showAbout()">ℹ️ About</a> | 
-            <a href="https://github.com" target="_blank">🔗 GitHub</a>
-        </p>
-        <p style="margin-top: 15px; font-size: 0.8em; opacity: 0.7;">
-            Built with ❤️ using Go, Gin, & SQLite | © 2026 echter.link
-        </p>
+        <div class="footer-content">
+            <div class="version-badge">
+                <span class="label">Version</span>
+                <span class="version">v1.3.1</span>
+            </div>
+            
+            <div class="footer-links">
+                <a href="https://github.com/LukasLow/echter.link/blob/main/CHANGELOG.md" target="_blank">📋 Changelog</a>
+                <a href="#" onclick="showAbout()">ℹ️ About</a>
+                <a href="https://github.com/LukasLow/echter.link" target="_blank">🐙 GitHub</a>
+            </div>
+            
+            <p class="footer-tech">
+                Built with Go + Gin + SQLite | © 2026 echter.link
+            </p>
+        </div>
     </footer>
 
     <script>
-        // Mouse Glow Effect
-        const mouseGlow = document.getElementById('mouseGlow');
-        let mouseX = 0, mouseY = 0;
-        let glowX = 0, glowY = 0;
+        // Theme handling
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        function animateGlow() {
-            glowX += (mouseX - glowX) * 0.1;
-            glowY += (mouseY - glowY) * 0.1;
-            
-            mouseGlow.style.left = glowX - 10 + 'px';
-            mouseGlow.style.top = glowY - 10 + 'px';
-            
-            requestAnimationFrame(animateGlow);
-        }
-        animateGlow();
-
-        // Snow Effect
-        function createSnowflake() {
-            const snowflake = document.createElement('div');
-            snowflake.className = 'snowflake';
-            snowflake.innerHTML = '❄';
-            snowflake.style.left = Math.random() * window.innerWidth + 'px';
-            snowflake.style.animationDuration = Math.random() * 3 + 2 + 's';
-            snowflake.style.opacity = Math.random();
-            snowflake.style.fontSize = Math.random() * 10 + 10 + 'px';
-            
-            document.body.appendChild(snowflake);
-            
-            setTimeout(() => {
-                snowflake.remove();
-            }, 5000);
+        function getSystemTheme() {
+            return prefersDarkScheme.matches ? 'dark' : 'light';
         }
 
-        // Create snowflakes periodically
-        setInterval(createSnowflake, 300);
+        function applyTheme(theme) {
+            const effectiveTheme = theme === 'auto' ? getSystemTheme() : theme;
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
+        }
 
-        // Handle hash-based routing on page load
-        window.addEventListener('load', function() {
-            if (window.location.hash && window.location.hash.startsWith('#')) {
-                const shortCode = window.location.hash.substring(1);
-                if (shortCode) {
-                    window.location.href = '/' + shortCode;
-                }
-            }
-        });
+        function setActiveButton(theme) {
+            themeButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.theme === theme);
+            });
+        }
 
-        // Handle snow melt effect when mouse touches snow
-        document.addEventListener('mousemove', (e) => {
-            const snowflakes = document.querySelectorAll('.snowflake');
-            snowflakes.forEach(snowflake => {
-                const rect = snowflake.getBoundingClientRect();
-                const distance = Math.sqrt(
-                    Math.pow(e.clientX - (rect.left + rect.width / 2), 2) +
-                    Math.pow(e.clientY - (rect.top + rect.height / 2), 2)
-                );
-                
-                if (distance < 30) {
-                    // Create melt effect
-                    snowflake.style.transition = 'all 0.3s ease';
-                    snowflake.style.transform = 'scale(0) rotate(720deg)';
-                    snowflake.style.opacity = '0';
-                    
-                    // Create sparkle effect
-                    const sparkle = document.createElement('div');
-                    sparkle.style.position = 'fixed';
-                    sparkle.style.left = e.clientX + 'px';
-                    sparkle.style.top = e.clientY + 'px';
-                    sparkle.style.width = '4px';
-                    sparkle.style.height = '4px';
-                    sparkle.style.background = 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%)';
-                    sparkle.style.borderRadius = '50%';
-                    sparkle.style.pointerEvents = 'none';
-                    sparkle.style.zIndex = '10000';
-                    sparkle.style.animation = 'sparkle 0.5s ease-out forwards';
-                    
-                    document.body.appendChild(sparkle);
-                    
-                    setTimeout(() => {
-                        sparkle.remove();
-                        snowflake.remove();
-                    }, 500);
-                }
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'auto';
+        applyTheme(savedTheme);
+        setActiveButton(savedTheme);
+
+        // Theme button clicks
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.dataset.theme;
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
+                setActiveButton(theme);
             });
         });
 
-        // Add sparkle animation
-        const style = document.createElement('style');
-        style.textContent = '@keyframes sparkle { 0% { transform: scale(0); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.8; } 100% { transform: scale(0); opacity: 0; } }';
-        document.head.appendChild(style);
+        // Listen for system theme changes
+        prefersDarkScheme.addEventListener('change', (e) => {
+            const currentTheme = localStorage.getItem('theme') || 'auto';
+            if (currentTheme === 'auto') {
+                applyTheme('auto');
+            }
+        });
 
+        // URL shortening
         async function shortenUrl() {
-            const url = document.getElementById('longUrl').value;
-            const customCode = document.getElementById('customCode').value;
+            const url = document.getElementById('longUrl').value.trim();
+            const customCode = document.getElementById('customCode').value.trim();
             const expiresIn = parseInt(document.getElementById('expiresIn').value) || 0;
             
-            // Add https:// prefix if not present (for API compatibility)
+            if (!url) {
+                showResult('Bitte gib eine URL ein', true);
+                return;
+            }
+            
             const fullUrl = url.startsWith('http://') || url.startsWith('https://') ? url : 'https://' + url;
             
-            const response = await fetch('/api/shorten', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    original_url: fullUrl, 
-                    custom_code: customCode,
-                    expires_in: expiresIn
-                })
-            });
-            
-            const data = await response.json();
-            if (data.short_code) {
-                const shortUrl = data.short_url;
-                let html = '<div class="result">';
-                html += '<strong>Short URL:</strong> <a href="' + shortUrl + '" target="_blank">' + shortUrl + '</a><br>';
-                html += '<button onclick="copyToClipboard(\'' + shortUrl + '\')">📋 Copy Link</button>';
-                if (data.expires_at) {
-                    html += '<br><small>Expires: ' + new Date(data.expires_at).toLocaleString() + '</small>';
-                }
-                html += '</div>';
-                document.getElementById('shortResult').innerHTML = html;
+            try {
+                const response = await fetch('/api/shorten', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        original_url: fullUrl,
+                        custom_code: customCode,
+                        expires_in: expiresIn
+                    })
+                });
                 
-                copyToClipboard(shortUrl);
-            } else {
-                document.getElementById('shortResult').innerHTML = 
-                    '<div class="result">Error: ' + (data.error || 'Unknown error') + '</div>';
+                const data = await response.json();
+                
+                if (data.short_code) {
+                    let html = '<strong>Dein Kurzlink:</strong><br>';
+                    html += '<a href="' + data.short_url + '" target="_blank">' + data.short_url + '</a>';
+                    if (data.expires_at) {
+                        html += '<br><small style="color:var(--text-secondary)">Läuft ab: ' + new Date(data.expires_at).toLocaleString('de-DE') + '</small>';
+                    }
+                    html += '<br><button class="btn-copy" onclick="copyToClipboard(\'' + data.short_url + '\')">📋 Kopieren</button>';
+                    showResult(html, false);
+                    copyToClipboard(data.short_url);
+                } else {
+                    showResult(data.error || 'Ein Fehler ist aufgetreten', true);
+                }
+            } catch (err) {
+                showResult('Verbindungsfehler: ' + err.message, true);
             }
         }
-
+        
+        function showResult(content, isError) {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="result ' + (isError ? 'error' : '') + '">' + content + '</div>';
+        }
+        
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                console.log('Link copied to clipboard');
+                console.log('Copied:', text);
             }).catch(err => {
-                console.error('Failed to copy:', err);
+                console.error('Copy failed:', err);
             });
         }
-
-        function showStats() {
-            alert('📊 Statistics coming soon!\n\nTotal URLs created: ' + Math.floor(Math.random() * 1000) + '\nTotal clicks: ' + Math.floor(Math.random() * 10000) + '\nActive links: ' + Math.floor(Math.random() * 500));
-        }
-
+        
         function showAbout() {
-            alert('ℹ️ About echter.link\n\nVersion: V1.1 - Core & Shortener\n\nA modern URL shortener built with:\n• Go + Gin Framework\n• SQLite Database\n• Dark Mode UI\n• Interactive Mouse Effects\n• Snow Animation\n\nFeatures:\n• Random & Custom Short Codes\n• URL Validation\n• Expiration Dates\n• Input Group with https:// Prefix\n• Mouse Glow Effect\n• Snow Melt Interaction\n\n© 2026 echter.link');
+            const theme = document.documentElement.getAttribute('data-theme');
+            alert('echter.link v1.3\n\nEin moderner URL-Shortener mit:\n• SQLite Datenbank\n• Custom Short Codes\n• Ablaufdaten (max. 7 Tage)\n• Dark Mode (aktuell: ' + theme + ')\n• Go + Gin Backend\n\n© 2026 echter.link');
         }
+        
+        // Enter key support
+        document.getElementById('longUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') shortenUrl();
+        });
     </script>
 </body>
 </html>`

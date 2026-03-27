@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"time"
 
 	_ "modernc.org/sqlite"
 )
@@ -29,6 +30,11 @@ func InitDB() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Configure connection pool for concurrent access
+	DB.SetMaxOpenConns(25)
+	DB.SetMaxIdleConns(25)
+	DB.SetConnMaxLifetime(5 * time.Minute)
 
 	createTables := `
 	CREATE TABLE IF NOT EXISTS short_urls (

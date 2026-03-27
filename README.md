@@ -1,152 +1,127 @@
-# echter.link - Modern URL Shortener!
+# echter.link
 
-A lightweight URL shortener built with Go, featuring Dark Mode UI, interactive mouse effects, and snow animation. Optimized for small servers (0.5 vCPU, 500MB RAM).
+Ein moderner, selbst hostbarer URL-Shortener mit deutscher Benutzeroberfläche, Dark Mode und einfacher Bedienung. Gebaut mit Go, Gin und SQLite.
+
+![Version](https://img.shields.io/badge/version-1.3.1-blue)
+![Go](https://img.shields.io/badge/go-1.21-green)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
 
 ## ✨ Features
 
-- **🚀 URL Shortening**: Create short URLs with random or custom codes
-- **🌙 Dark Mode**: Modern dark theme with gradient accents
-- **✨ Mouse Glow Effect**: Interactive light source following cursor
-- **❄️ Snow Animation**: Falling snow with melt interaction
-- **📱 Responsive Design**: Mobile-friendly interface
-- **🔗 Input Group**: Visual `https://` prefix for better UX
-- **📊 Statistics**: Demo statistics in footer
-- **⏰ Expiration**: Optional URL expiration dates
-- **✅ URL Validation**: Anti-phishing protection
-- **🐳 Docker Ready**: Optimized container deployment
-- **💾 SQLite**: Lightweight, file-based database
+- **🔗 Kurzlinks erstellen:** Wähle zwischen zufälligen oder eigenen Codes
+- **⏰ Ablaufdatum:** Links automatisch nach 1h, 24h, 3d oder 7d ablaufen lassen
+- **🌙 Dark Mode:** Automatisch, Hell oder Dunkel - mit System-Erkennung
+- **🇩🇪 Deutsche UI:** Vollständig übersetzt und benutzerfreundlich
+- **📱 Responsive:** Funktioniert auf Desktop, Tablet und Smartphone
+- **🐳 Docker:** Einfache Installation mit Docker Compose
+- **💾 SQLite:** Keine Datenbank-Setup nötig, alles in einer Datei
+- **🚀 Schnell:** Optimiert für kleine Server (0.5 vCPU, 500MB RAM)
 
-## 🎯 Live Demo
+## 🚀 Schnellstart
 
-Visit `http://localhost:8080` to see the interactive dark mode interface with mouse glow and snow effects.
-
-## 🚀 Quick Start
-
-### Docker (Recommended)
+### Mit Docker (Empfohlen)
 
 ```bash
-# Clone and run
+# Repository klonen
 git clone https://github.com/LukasLow/echter.link.git
 cd echter.link
-docker compose up -d
 
-# Or pull from GitHub Container Registry
-docker run -d -p 8080:8080 ghcr.io/lukaslow/echter.link:latest
+# Server starten
+docker compose up -d
 ```
 
-### Local Development
+### Mit Podman (Rootless, sicherer)
 
 ```bash
-# Clone repository
+# Repository klonen
 git clone https://github.com/LukasLow/echter.link.git
 cd echter.link
 
-# Install dependencies
-go mod tidy
+# Mit podman-compose
+podman-compose up -d
 
-# Run server
+# Oder Podman native
+podman build -t echter-link .
+podman run -d -p 8080:8080 -v ./data:/root/data:z echter-link
+```
+
+Die Webseite ist dann unter `http://localhost:8080` erreichbar.
+
+### Lokal entwickeln
+
+```bash
+# Go 1.21+ benötigt
+git clone https://github.com/LukasLow/echter.link.git
+cd echter.link
+go mod tidy
 go run cmd/server.go
 ```
 
-## 🐳 Docker Registry
-
-The Docker image is automatically built and pushed to GitHub Container Registry:
-
-```bash
-# Pull the latest image
-docker pull ghcr.io/lukaslow/echter.link:latest
-
-# Run with volume for persistence
-docker run -d \
-  -p 8080:8080 \
-  -v $(pwd)/data:/root/data \
-  ghcr.io/lukaslow/echter.link:latest
-```
-
-## 📁 Project Structure
+## � Projektstruktur
 
 ```
 echter.link/
 ├── cmd/
-│   └── server.go              # Main application entry point
+│   └── server.go              # Hauptanwendung
 ├── internal/
 │   ├── database/
-│   │   └── database.go        # Database initialization and configuration
+│   │   └── database.go        # Datenbank-Setup
 │   ├── handlers/
-│   │   ├── url.go            # URL shortening API handlers
-│   │   └── web.go            # Web UI handler with dark mode
+│   │   ├── url.go            # API-Logik
+│   │   └── web.go            # Web-Interface
 │   └── models/
-│       └── shorturl.go        # Data models
-├── .github/workflows/
-│   └── docker.yml            # GitHub Actions for CI/CD
-├── Dockerfile                 # Multi-stage Docker build
-├── docker-compose.yml         # Local development setup
-├── go.mod                    # Go module definition
-└── README.md                 # This file
+│       └── shorturl.go        # Datenmodelle
+├── Dockerfile                 # Docker-Build
+├── docker-compose.yml         # Docker-Compose Konfig
+├── go.mod                     # Go-Abhängigkeiten
+├── CHANGELOG.md              # Versionshistorie
+└── README.md                 # Diese Datei
 ```
 
-## 🔧 Configuration
+## 🔧 Konfiguration
 
-Environment variables:
+Über Umgebungsvariablen:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GIN_MODE` | `release` | Gin framework mode |
-| `DB_PATH` | `./echter.link.sqlite` | SQLite database file path |
-| `DOMAIN` | `http://localhost:8080` | Base domain for short URLs |
+| Variable | Standard | Beschreibung |
+|----------|----------|--------------|
+| `GIN_MODE` | `release` | Gin Framework Modus |
+| `DB_PATH` | `./echter.link.sqlite` | SQLite Datenbankpfad |
+| `DOMAIN` | `http://localhost:8080` | Basis-URL für Kurzlinks |
 
-## 🎨 UI Features
+## 📊 API
 
-### Dark Mode Design
-- **Background**: Deep black (`#0a0a0a`)
-- **Containers**: Dark gray (`#1a1a1a`)
-- **Inputs**: Medium gray (`#2a2a2a`)
-- **Accents**: Blue gradients with hover effects
-
-### Interactive Effects
-- **Mouse Glow**: Smooth light source following cursor movement
-- **Snow Animation**: Continuous falling snowflakes with random properties
-- **Snow Melt**: Interactive melting when mouse touches snowflakes
-- **Sparkle Effects**: Visual feedback during snow melt
-
-### Footer
-- **Version Display**: Current version badge
-- **Navigation**: Statistics, About, GitHub links
-- **Credits**: Build information and copyright
-
-## 📊 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Web interface |
-| `POST` | `/api/shorten` | Create short URL |
-| `GET` | `/:code` | Redirect to original URL |
-| `GET` | `/#:code` | Hash-based redirect |
-
-### Create Short URL
+### Kurzlink erstellen
 
 ```bash
 curl -X POST http://localhost:8080/api/shorten \
   -H "Content-Type: application/json" \
   -d '{
     "original_url": "https://example.com",
-    "custom_code": "my-link",
+    "custom_code": "mein-link",
     "expires_in": 24
   }'
 ```
 
-Response:
+**Antwort:**
 ```json
 {
-  "short_url": "http://localhost:8080/#my-link",
-  "short_code": "my-link",
-  "expires_at": null
+  "short_url": "http://localhost:8080/mein-link",
+  "short_code": "mein-link",
+  "expires_at": "2026-03-28T20:00:00Z"
 }
 ```
 
-## 🗄️ Database Schema
+### Endpunkte
 
-SQLite database with one table:
+| Methode | URL | Beschreibung |
+|---------|-----|--------------|
+| `GET` | `/` | Web-Interface |
+| `POST` | `/api/shorten` | Kurzlink erstellen |
+| `GET` | `/:code` | Weiterleitung zum Original |
+
+## 🗄️ Datenbank
+
+SQLite mit einer Tabelle:
 
 ```sql
 CREATE TABLE short_urls (
@@ -159,47 +134,28 @@ CREATE TABLE short_urls (
 );
 ```
 
-## 🔒 Security
+## 🔒 Sicherheit
 
-- **URL Validation**: Only allows `http://` and `https://` URLs
-- **Input Sanitization**: Proper validation and sanitization
-- **SQLite Security**: File-based database with proper permissions
-- **Docker Security**: Multi-stage builds, minimal base image
+- **URL-Validierung:** Nur `http://` und `https://` erlaubt
+- **Eingabe-Validierung:** Custom Codes: 3-32 Zeichen, alphanumerisch + `-` und `_`
+- **Zeitlimit:** Anonyme Nutzer maximal 7 Tage
+- **Graceful Shutdown:** Saubere Beendigung ohne Datenverlust
 
 ## 📈 Performance
 
-- **Memory Usage**: ~250MB base, 500MB limit
-- **CPU Usage**: Optimized for 0.5 vCPU
-- **Response Time**: <100ms for API calls
-- **Container Size**: ~20MB compressed
+- **Speicher:** ~250MB Basis, 500MB Limit
+- **CPU:** Optimiert für 0.5 vCPU
+- **Antwortzeit:** <100ms für API-Aufrufe
+- **Container-Größe:** ~20MB komprimiert
 
-## 🔄 CI/CD
+## � Versionen
 
-GitHub Actions automatically:
-- Builds Docker images on push to main
-- Pushes to GitHub Container Registry
-- Supports multi-architecture (amd64/arm64)
-- Generates SBOM for security scanning
+Siehe [CHANGELOG.md](CHANGELOG.md) für die vollständige Versionshistorie.
 
-## 🤝 Contributing
+## 📄 Lizenz
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is open source. See the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- [Gin Framework](https://gin-gonic.com/) - HTTP web framework
-- [Modern SQLite](https://modernc.org/sqlite) - SQLite driver
-- [Docker](https://www.docker.com/) - Container platform
-- [GitHub Actions](https://github.com/features/actions) - CI/CD
+Open Source - siehe LICENSE Datei.
 
 ---
 
-**Built with ❤️ using Go, Gin, & SQLite**
+**Gebaut mit ❤️ mit Go, Gin & SQLite**

@@ -1,9 +1,16 @@
 package main
 
 import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"echter.link/internal/database"
 	"echter.link/internal/handlers"
-	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,14 +24,33 @@ func main() {
 
 	r.POST("/api/shorten", handlers.CreateShortURL)
 	r.GET("/", handlers.HomeHandler)
-	
+
 	// Handle redirects for short URLs
 	r.GET("/:code", handlers.RedirectShortCode)
-	
-	// Handle hash-based redirects for frontend
-	r.GET("/#/:code", handlers.RedirectShortCode)
 
-	log.Println("🚀 echter.link V1.1 starting on :8080")
-	log.Println("✅ Features: Go-Backend, SQLite, Random Codes, Custom Codes, URL Validation, Expiration")
-	r.Run(":8080")
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	// Graceful shutdown handling
+	go func() {
+		log.Println("🚀 echter.link V1.1 starting on :8080")
+		log.Println("✅ Features: Go-Backend, SQLite, Random Codes, Custom Codes, URL Validation, Expiration")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+	log.Println("Server exiting")
 }
