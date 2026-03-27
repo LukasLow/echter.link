@@ -49,51 +49,38 @@ Die Webseite ist dann unter `http://localhost:8080` erreichbar.
 
 ## 🖥️ Server-Setup (Debian)
 
-Komplette Anleitung für einen frischen Debian-Server (1 CPU, 1GB RAM, 10GB Storage).
+Komplette Anleitung für einen frischen Debian-Server (1 CPU, 1GB RAM, 10GB Storage). 
+**Kein git nötig** - das Image kommt fertig gebaut von GitHub Container Registry.
 
 ### 1. System aktualisieren
 
 ```bash
 # Als root oder mit sudo
 apt update && apt upgrade -y
-apt install -y curl wget git
+apt install -y curl
 ```
 
 ### 2. Podman installieren
 
 ```bash
-# Podman aus den offiziellen Repositories
-apt install -y podman podman-compose
+apt install -y podman
 
 # Überprüfen
 podman --version
 ```
 
-### 3. Repository klonen
+### 3. Datenverzeichnis anlegen
 
 ```bash
-cd /opt
-git clone https://github.com/LukasLow/echter.link.git
-cd echter.link
-```
-
-### 4. Persistente Daten anlegen
-
-```bash
-# Datenverzeichnis erstellen
+# Persistente Daten für SQLite
 mkdir -p /opt/echter.link/data
-
-# Berechtigungen setzen (für rootless Podman)
 chmod 755 /opt/echter.link/data
 ```
 
-### 5. Container starten (mit Podman)
+### 4. Container starten (fertiges Image)
 
 ```bash
-# Container bilden und starten
-podman build -t echter-link .
-
-# Container laufen lassen (Port 8080)
+# Pre-built Image von GitHub Container Registry laden
 podman run -d \
   --name echter-link \
   -p 8080:8080 \
@@ -102,8 +89,10 @@ podman run -d \
   -e DB_PATH=/root/data/echter.link.sqlite \
   -e DOMAIN=https://deine-domain.de \
   --restart unless-stopped \
-  echter-link
+  ghcr.io/lukaslow/echter.link:latest
 ```
+
+**Hinweis:** Ersetze `deine-domain.de` mit deiner tatsächlichen Domain.
 
 ### 6. SSL/HTTPS mit Caddy (leichtgewichtig)
 
