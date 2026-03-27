@@ -87,12 +87,11 @@ podman run -d \
   -v /opt/echter.link/data:/root/data:z \
   -e GIN_MODE=release \
   -e DB_PATH=/root/data/echter.link.sqlite \
-  -e DOMAIN=https://deine-domain.de \
+  -e DOMAIN=https://echter.link \
   --restart unless-stopped \
   ghcr.io/lukaslow/echter.link:latest
 ```
 
-**Hinweis:** Ersetze `deine-domain.de` mit deiner tatsächlichen Domain.
 
 ### 6. SSL/HTTPS mit Caddy (leichtgewichtig)
 
