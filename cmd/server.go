@@ -25,6 +25,21 @@ func main() {
 	r.POST("/api/shorten", handlers.CreateShortURL)
 	r.SetTrustedProxies([]string{"127.0.0.1"})
 
+	// Admin routes
+	r.GET("/admin", handlers.AdminLoginHandler)
+	r.POST("/admin/login", handlers.AdminLogin)
+	r.GET("/admin/logout", handlers.AdminLogout)
+
+	// Protected admin routes
+	admin := r.Group("/admin")
+	admin.Use(handlers.AuthRequired())
+	{
+		admin.GET("/dashboard", handlers.AdminDashboardHandler)
+		admin.GET("/api/stats", handlers.AdminStats)
+		admin.GET("/api/links", handlers.AdminLinks)
+		admin.DELETE("/api/links/:code", handlers.AdminDeleteLink)
+	}
+
 	// Handle redirects for short URLs
 	r.GET("/:code", handlers.RedirectShortCode)
 

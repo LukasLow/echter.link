@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	_ "modernc.org/sqlite"
 )
 
@@ -47,6 +49,13 @@ func InitDB() {
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_short_code ON short_urls(short_code);
+
+	CREATE TABLE IF NOT EXISTS admin_users (
+		id TEXT PRIMARY KEY,
+		username TEXT UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
 	`
 
 	_, err = DB.Exec(createTables)
@@ -54,5 +63,50 @@ func InitDB() {
 		log.Fatal(err)
 	}
 
+	// Create default admin user if not exists
+	createDefaultAdmin()
+
 	log.Println("✅ V1.1: Go-Backend & SQLite Datenbank initialisiert")
+}
+
+// Create default admin from environment variables
+func createDefaultAdmin() {
+	adminUser := os.Getenv("ADMIN_USERNAME")
+	adminPass := os.Getenv("ADMIN_PASSWORD")
+
+	if adminUser == "" {
+		adminUser = "admin"
+	}
+	if adminPass == "" {
+		adminPass = "admin123"
+	}
+
+	// Check if admin already exists
+	var existingID string
+	err := DB.QueryRow("SELECT id FROM admin_users WHERE username = ?", adminUser).Scan(&existingID)
+	if err == nil {
+		log.Println("✅ Admin-Benutzer existiert bereits")
+		return
+	}
+	if err != sql.ErrNoRows {
+		log.Println("⚠️ Fehler beim Prüfen des Admin-Benutzers:", err)
+		return
+	}
+
+	// Hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(adminPass), bcrypt.DefaultCost)
+	if err != nil {
+		log.Println("⚠️ Fehler beim Hashen des Admin-Passworts:", err)
+		return
+	}
+
+	// Insert admin
+	_, err = DB.Exec("INSERT INTO admin_users (id, username, password_hash) VALUES (?, ?, ?)",
+		uuid.New().String(), adminUser, string(hash))
+	if err != nil {
+		log.Println("⚠️ Fehler beim Erstellen des Admin-Benutzers:", err)
+		return
+	}
+
+	log.Printf("✅ Admin-Benutzer '%s' erstellt (Passwort aus ADMIN_PASSWORD oder Standard: admin123)", adminUser)
 }

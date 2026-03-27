@@ -555,3 +555,515 @@ func HomeHandler(c *gin.Context) {
 </html>`
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
 }
+
+// AdminLoginHandler serves the admin login page
+func AdminLoginHandler(c *gin.Context) {
+	html := `<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Login - echter.link</title>
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --card-bg: white;
+            --card-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            --text-primary: #333;
+            --input-bg: #f8f9fa;
+            --input-border: #e9ecef;
+            --input-focus: #667eea;
+            --btn-primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --error-bg: #fee;
+            --error-border: #e74c3c;
+            --error-color: #c33;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --card-bg: #1e1e2e;
+            --card-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            --text-primary: #eaeaea;
+            --input-bg: #2a2a3a;
+            --input-border: #3a3a4a;
+            --input-focus: #8b5cf6;
+            --btn-primary-bg: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            --error-bg: #3a1f1f;
+            --error-border: #ef4444;
+            --error-color: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-primary);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--input-border);
+            border-radius: 10px;
+            background: var(--input-bg);
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--btn-primary-bg);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .error {
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: var(--error-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: var(--input-focus);
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔐 Admin Login</h1>
+        <div id="error" class="error"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Benutzername</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Passwort</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Anmelden</button>
+        </form>
+        <div class="back-link">
+            <a href="/">← Zurück zur Startseite</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'none';
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    window.location.href = '/admin/dashboard';
+                } else {
+                    const data = await response.json();
+                    errorDiv.textContent = data.error || 'Login fehlgeschlagen';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Verbindungsfehler. Bitte versuche es erneut.';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>`
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+}
+
+// AdminDashboardHandler serves the admin dashboard page
+func AdminDashboardHandler(c *gin.Context) {
+	html := `<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard - echter.link</title>
+    <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --card-bg: white;
+            --card-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --input-bg: #f8f9fa;
+            --input-border: #e9ecef;
+            --input-focus: #667eea;
+            --btn-primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --btn-danger-bg: #e74c3c;
+            --stat-bg: #f8f9fa;
+            --table-header: #667eea;
+            --table-header-text: white;
+            --table-row-alt: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --card-bg: #1e1e2e;
+            --card-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --input-bg: #2a2a3a;
+            --input-border: #3a3a4a;
+            --input-focus: #8b5cf6;
+            --btn-primary-bg: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            --btn-danger-bg: #ef4444;
+            --stat-bg: #2a2a3a;
+            --table-header: #8b5cf6;
+            --table-header-text: white;
+            --table-row-alt: #2a2a3a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-primary);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: var(--btn-danger-bg);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--input-focus);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .links-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+        }
+
+        .links-section h2 {
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .links-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .links-table th,
+        .links-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--input-border);
+        }
+
+        .links-table th {
+            background: var(--table-header);
+            color: var(--table-header-text);
+            font-weight: 600;
+        }
+
+        .links-table tr:nth-child(even) {
+            background: var(--table-row-alt);
+        }
+
+        .short-code {
+            font-family: monospace;
+            background: var(--input-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .delete-btn {
+            padding: 6px 12px;
+            background: var(--btn-danger-bg);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .delete-btn:hover {
+            opacity: 0.8;
+        }
+
+        .original-url {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Admin Dashboard</h1>
+            <div>
+                <a href="/" style="margin-right: 15px; color: var(--input-focus);">Zurück zur Startseite</a>
+                <button class="logout-btn" onclick="logout()">Abmelden</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalLinks">-</div>
+                <div class="stat-label">Gesamte Links</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalClicks">-</div>
+                <div class="stat-label">Gesamte Klicks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeLinks">-</div>
+                <div class="stat-label">Aktive Links</div>
+            </div>
+        </div>
+
+        <div class="links-section">
+            <h2>🔗 Alle Kurzlinks</h2>
+            <div id="linksContainer">
+                <div class="loading">Lade Links...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load stats on page load
+        async function loadStats() {
+            try {
+                const response = await fetch('/admin/api/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalLinks').textContent = data.total_links;
+                    document.getElementById('totalClicks').textContent = data.total_clicks;
+                    document.getElementById('activeLinks').textContent = data.active_links;
+                }
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        // Load links on page load
+        async function loadLinks() {
+            try {
+                const response = await fetch('/admin/api/links');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayLinks(data.links);
+                } else if (response.status === 401) {
+                    window.location.href = '/admin';
+                }
+            } catch (err) {
+                console.error('Failed to load links:', err);
+                document.getElementById('linksContainer').innerHTML = 
+                    '<div class="empty-state">Fehler beim Laden der Links</div>';
+            }
+        }
+
+        function displayLinks(links) {
+            const container = document.getElementById('linksContainer');
+            
+            if (links.length === 0) {
+                container.innerHTML = '<div class="empty-state">Keine Links vorhanden</div>';
+                return;
+            }
+
+            let html = '<table class="links-table"><thead><tr>';
+            html += '<th>Kurzlink</th><th>Ziel-URL</th><th>Klicks</th><th>Erstellt</th><th>Aktion</th>';
+            html += '</tr></thead><tbody>';
+
+            links.forEach(link => {
+                const created = new Date(link.created_at).toLocaleDateString('de-DE');
+                const shortUrl = window.location.origin + '/' + link.short_code;
+                
+                html += '<tr>';
+                html += '<td><a href="' + shortUrl + '" target="_blank" class="short-code">' + link.short_code + '</a></td>';
+                html += '<td class="original-url" title="' + link.original_url + '">' + link.original_url + '</td>';
+                html += '<td>' + link.clicks + '</td>';
+                html += '<td>' + created + '</td>';
+                html += '<td><button class="delete-btn" onclick="deleteLink(\'' + link.short_code + '\')">Löschen</button></td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function deleteLink(code) {
+            if (!confirm('Möchtest du den Link "' + code + '" wirklich löschen?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/links/' + code, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadLinks();
+                    loadStats();
+                } else {
+                    alert('Fehler beim Löschen des Links');
+                }
+            } catch (err) {
+                console.error('Failed to delete link:', err);
+                alert('Fehler beim Löschen des Links');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/admin/logout');
+                window.location.href = '/admin';
+            } catch (err) {
+                console.error('Logout failed:', err);
+            }
+        }
+
+        // Load data on page load
+        loadStats();
+        loadLinks();
+    </script>
+</body>
+</html>`
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+}
