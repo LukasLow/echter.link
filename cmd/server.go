@@ -23,7 +23,7 @@ func main() {
 	r := gin.Default()
 
 	r.POST("/api/shorten", handlers.CreateShortURL)
-	r.GET("/", handlers.HomeHandler)
+	r.SetTrustedProxies([]string{"127.0.0.1"})
 
 	// Handle redirects for short URLs
 	r.GET("/:code", handlers.RedirectShortCode)

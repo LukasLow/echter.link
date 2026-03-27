@@ -81,14 +81,14 @@ chmod 755 /opt/echter.link/data
 
 ```bash
 # Pre-built Image von GitHub Container Registry laden
+# Port nur auf localhost (127.0.0.1) für Sicherheit - Caddy macht SSL
 podman run -d \
   --name echter-link \
-  -p 8080:8080 \
+  -p 127.0.0.1:8080:8080 \
   -v /opt/echter.link/data:/root/data:z \
   -e GIN_MODE=release \
   -e DB_PATH=/root/data/echter.link.sqlite \
   -e DOMAIN=https://echter.link \
-  --restart unless-stopped \
   ghcr.io/lukaslow/echter.link:latest
 ```
 
@@ -121,10 +121,11 @@ systemctl start caddy
 
 ```bash
 # Watchtower Container starten (prüft alle 24h auf Updates)
+# Socket-Pfad für Podman auf Debian (als Root)
 podman run -d \
   --name watchtower \
-  -v /run/user/$(id - u)/podman/podman.sock:/var/run/docker.sock:z \
-  --restart unless-stopped \
+  -v /run/podman/podman.sock:/var/run/docker.sock:z \
+  --restart always \
   containrrr/watchtower \
   --cleanup \
   --interval 86400 \
@@ -136,16 +137,13 @@ podman run -d \
 Für automatischen Start beim Booten:
 
 ```bash
-# Podman-Container als Systemd-Service generieren
-podman generate systemd --name echter-link --files
+# Podman-Container als Systemd-Service generieren (--new erstellt Container frisch)
+cd /etc/systemd/system/
+podman generate systemd --name echter-link --new --files
 
-# Service-Datei verschieben
-mv container-echter-link.service /etc/systemd/system/
-
-# Aktivieren und starten
+# Aktivieren
 systemctl daemon-reload
-systemctl enable container-echter-link.service
-systemctl start container-echter-link.service
+systemctl enable --now container-echter-link.service
 ```
 
 ### 9. Backup der Datenbank
